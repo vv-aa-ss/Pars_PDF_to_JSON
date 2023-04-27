@@ -1,5 +1,5 @@
+from download_pdf import get_pdf
 import tabula
-import pandas
 import json
 import os
 
@@ -9,6 +9,7 @@ temp_list_nct = []
 group = ""
 directory = 'PDF'
 result = {}
+
 
 def test_pdf(file):
     temp = []
@@ -20,16 +21,14 @@ def test_pdf(file):
     return 0
 
 
-
-
-# Перебираем  PDF файлы
-def get_file(directory):
+# Перебираем PDF файлы
+def get_file(folder):
     global result
     global temp_list_ct
     global temp_list_nct
-    
-    for filename in os.listdir(directory):
-        file = os.path.join(directory, filename)
+
+    for filename in os.listdir(folder):
+        file = os.path.join(folder, filename)
         if os.path.isfile(file):
             # Парсим PDF и добавляем в результат, затем чистим temp
             if test_pdf(file) == 0:
@@ -63,6 +62,7 @@ def test(file):
     except:
         print(' ---> Ошибка добавления в структуру!')
 
+
 def pars_pdf(file):
     global result
     global temp_list_ct
@@ -73,10 +73,10 @@ def pars_pdf(file):
     text = []
 
     df = test(file)
-    group = file[len(directory)+1:len(file)-4]
-    print(f"PROCESS ->> {group}", end="")
-    # Парсим PDF
-    
+    group_name = file[len(directory) + 1:len(file) - 4]
+    print(f"PROCESS ->> {group_name}", end="")
+    # Pars PDF
+
     # Вместо пустых данных - 0
     df = df.fillna("0")
     # Распаковываем DataFrame
@@ -86,10 +86,10 @@ def pars_pdf(file):
     for data in text[1:]:
         # Если в данных нет названия недели
         if data[1] in "0":
-            # Добавляем пары
+            # Add pair
             dict_app(data)
         else:
-        # Если прошли день недели
+            # Если прошли день недели
             if day == "":
                 # Если первая итерация 
                 day = data[1]
@@ -107,29 +107,31 @@ def pars_pdf(file):
                     # Обрабатываем субботу
                     temp_list_ct.append(
                         dict(TimeStartEnd=data[3], Audience=data[5], LessonType=data[7], Teacher=data[9],
-                            Discipline=data[11]))
+                             Discipline=data[11]))
                     temp_list_nct.append(
                         dict(TimeStartEnd=data[3], Audience=data[19], LessonType=data[17], Teacher=data[15],
-                            Discipline=data[13]))
+                             Discipline=data[13]))
     result_ct[day] = temp_list_ct
     result_nct[day] = temp_list_nct
-    result[group] = {"odd":result_ct, "even":result_nct}
+    result[group_name] = {"odd": result_ct, "even": result_nct}
+    # Clear dict
     result_ct = {}
     result_nct = {}
     print(" >------Ok")
-    
 
 
-# Создаем JSON
+# Create JSON
 def get_json(result):
     with open('result.json', 'w') as fp:
         json.dump(result, fp)
 
 
 def main():
+    # get_pdf(url="https://mtuci.ru/time-table/")
     get_file(directory)
     get_json(result)
 
-    
+
 if __name__ == "__main__":
     main()
+    print("Done")
